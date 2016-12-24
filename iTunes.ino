@@ -27,13 +27,13 @@ bool get(String req, uint8_t* buf) {
         unsigned int t = millis();
         while (client.read() != '\n'); // Consume "HTTP/1.0 200 OK"
         while (true) {
-            if (millis() - t > TIMEOUT) break; // Timeout
+            if (millis() - t > TIMEOUT) {client.stop(); return false;} // Timeout
             if (client.available()) {
                 char c = client.read(); // Get next character
                 if (c == ':') { // If we find a colon
                     client.read(); // Consume the space character
                     do { // Loop while we haven't hit a newline
-                        if (millis() - t > TIMEOUT) break; // Timeout
+                        if (millis() - t > TIMEOUT) {client.stop(); return false;} // Timeout
                         c = client.read(); // Read next character
                         val.concat(c); // Add it to our value string
                     } while (c != '\n');
@@ -52,7 +52,7 @@ bool get(String req, uint8_t* buf) {
         }
 
         for (int i = 0; i < len && client.connected(); i++) {
-            if (millis() - t > TIMEOUT) break;
+            if (millis() - t > TIMEOUT) {client.stop(); return false;}
             if (client.available()) {
                 buf[i] = client.read();
             } else {
@@ -62,6 +62,7 @@ bool get(String req, uint8_t* buf) {
         client.stop();
         return true;
     } else {
+        client.stop();
         return false;
     }
 }

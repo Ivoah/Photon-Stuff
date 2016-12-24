@@ -1,6 +1,6 @@
+import numpy
 import bottle
 from PIL import Image
-import numpy
 from io import BytesIO
 from ScriptingBridge import *
 
