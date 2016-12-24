@@ -5,7 +5,6 @@
 #define IP      {192, 168, 1, 70}
 #define PORT    1337
 
-TCPClient client;
 String image = String("iTunes");
 ILI9163 tft = ILI9163(D1, D0, D2); // cs, rst, a0
 
@@ -14,26 +13,45 @@ int change_image(String new_image) {
     return 0;
 }
 
-bool get(String req, uint8_t* buf, int len) {
+bool get(String req, uint8_t* buf) {
+    TCPClient client;
     if (client.connect(IP, PORT)) {
         client.print("GET /");
         client.print(req);
         client.println(" HTTP/1.0");
         client.println("Content-Length: 0");
         client.println();
-        char last[4] = {0};
-        //char cl = [14] = {0};
-        //int len = 0;
+        String header;
+        String val;
+        int len = 0;
         unsigned int t = millis();
-        while (strncmp(last, "\r\n\r\n", 4)) {
-            if (millis() - t > TIMEOUT) break;
+        while (client.read() != '\n'); // Consume "HTTP/1.0 200 OK"
+        while (true) {
+            if (millis() - t > TIMEOUT) break; // Timeout
             if (client.available()) {
-                char c = client.read();
-                memmove(last, last + 1, 3);
-                last[3] = c;
+                char c = client.read(); // Get next character
+                if (c == ':') { // If we find a colon
+                    client.read(); // Consume the space character
+                    do { // Loop while we haven't hit a newline
+                        if (millis() - t > TIMEOUT) break; // Timeout
+                        c = client.read(); // Read next character
+                        val.concat(c); // Add it to our value string
+                    } while (c != '\n');
+                    val.remove(val.length() - 2); // Dump the last two characters ("\r\n")
+                    if (header.equals("Content-Length")) {
+                        len = val.toInt();
+                    }
+                    header = String(); // New header
+                    val = String(); // New value
+                } else if (c == '\n') { // If we find a newline before we find a colon
+                    break; // Break, we're done with the header
+                } else { // If we don't have a colon or a newline
+                    header.concat(c); // Add the character to our header string
+                }
             }
         }
-        for (int i = 0; i < len; i++) {
+
+        for (int i = 0; i < len && client.connected(); i++) {
             if (millis() - t > TIMEOUT) break;
             if (client.available()) {
                 buf[i] = client.read();
@@ -41,6 +59,7 @@ bool get(String req, uint8_t* buf, int len) {
                 i--;
             }
         }
+        client.stop();
         return true;
     } else {
         return false;
@@ -60,7 +79,7 @@ void setup() {
 }
 
 void loop() {
-    if (!get(image, tft.buffer, sizeof(tft.buffer)/sizeof(uint8_t))) {
+    if (!get(image, tft.buffer)) {
         for (size_t i = 0; i < sizeof(tft.buffer)/sizeof(uint8_t); i += 2) {
             uint8_t r = random(256);
             uint16_t c = rgb(r, r, r);
@@ -68,10 +87,10 @@ void loop() {
             tft.buffer[i + 1] = c & 0xff;
         }
     }
-    while (analogRead(A1) < 50) {get("volumeUp", NULL, 0); Particle.process();}
-    while (analogRead(A1) > 4000) {get("volumeDown", NULL, 0); Particle.process();}
-    if (analogRead(A0) < 50) {get("next", NULL, 0); while (analogRead(A0) < 50) Particle.process();}
-    if (analogRead(A0) > 4000) {get("previous", NULL, 0); while (analogRead(A0) > 4000) Particle.process();}
-    if (digitalRead(D3)) {get("playPause", NULL, 0); while (digitalRead(D3)) Particle.process();}
+    while (analogRead(A1) < 50) {get("volumeUp", NULL); Particle.process();}
+    while (analogRead(A1) > 4000) {get("volumeDown", NULL); Particle.process();}
+    if (analogRead(A0) < 50) {get("next", NULL); while (analogRead(A0) < 50) Particle.process();}
+    if (analogRead(A0) > 4000) {get("previous", NULL); while (analogRead(A0) > 4000) Particle.process();}
+    if (digitalRead(D3)) {get("playPause", NULL); while (digitalRead(D3)) Particle.process();}
     tft.copy_buffer();
 }
