@@ -8,3 +8,6 @@ Joystick:
 
 Noise:
 	particle flash Joda Noise.ino Particle_ILI9163/firmware/* Particle_PerlinNoise/firmware/*
+
+Print:
+	particle flash Joda Print.ino Particle_ILI9163/firmware/*
