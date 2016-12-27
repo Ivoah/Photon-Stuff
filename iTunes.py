@@ -41,6 +41,18 @@ def iTunes():
     except AttributeError:
         return err
 
+@bottle.get('/track')
+def title():
+    return iTunesSB.currentTrack().name()
+
+@bottle.get('/artist')
+def title():
+    return iTunesSB.currentTrack().artist()
+
+@bottle.get('/album')
+def title():
+    return iTunesSB.currentTrack().album()
+
 frame = None
 last_img = None
 @bottle.get('/<image>')
