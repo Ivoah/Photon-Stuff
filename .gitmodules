@@ -1,0 +1,6 @@
+[submodule "Particle_ILI9163"]
+	path = Particle_ILI9163
+	url = https://github.com/Ivoah/Particle_ILI9163.git
+[submodule "Particle_PerlinNoise"]
+	path = Particle_PerlinNoise
+	url = https://github.com/Ivoah/Particle_PerlinNoise.git
