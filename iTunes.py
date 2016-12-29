@@ -31,8 +31,8 @@ def next():
 def playPause():
     iTunesSB.playpause()
 
-err = image_to_data(Image.open('../pictures/err.png'))
-@bottle.get('/iTunes')
+err = image_to_data(Image.open('err.png'))
+@bottle.get('/artwork')
 def iTunes():
     try:
         art = iTunesSB.currentTrack().artworks().firstObject().rawData()
@@ -41,7 +41,7 @@ def iTunes():
     except AttributeError:
         return err
 
-@bottle.get('/track')
+@bottle.get('/title')
 def title():
     return iTunesSB.currentTrack().name()
 
@@ -52,20 +52,5 @@ def title():
 @bottle.get('/album')
 def title():
     return iTunesSB.currentTrack().album()
-
-frame = None
-last_img = None
-@bottle.get('/<image>')
-def get_image(image):
-    global frame, last_img
-    if image != last_img:
-        frame = 0
-    last_img = image
-    img = Image.open('../pictures/{}'.format(image))
-    if img.format == 'GIF':
-        img.seek(frame)
-        frame += 1
-        if frame >= img.n_frames: frame = 0
-    return image_to_data(img.resize((128, 128), Image.BILINEAR))
 
 bottle.run(reloader = True, host = '0.0.0.0', port = 1337)

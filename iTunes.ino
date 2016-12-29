@@ -5,18 +5,12 @@
 
 #define TIMEOUT 1500
 
-#define IP      {192, 168, 1, 70}
+#define IP      {192, 168, 1, 69}
 #define PORT    1337
 
-String image = String("iTunes");
 ILI9163 tft = ILI9163(D1, D0, D2); // cs, rst, a0
 
 uint8_t title[256];
-
-int change_image(String new_image) {
-    image = new_image;
-    return 0;
-}
 
 bool get(String req, uint8_t* buf) {
     TCPClient client;
@@ -76,9 +70,7 @@ void setup() {
     Serial.begin(9600);
     Serial.println(WiFi.localIP());
 
-    pinMode(D3, INPUT_PULLDOWN);
-
-    Particle.function("change_image", change_image);
+    pinMode(D3, INPUT_PULLUP);
 
     tft.set_color(WHITE, BLACK);
 
@@ -87,9 +79,9 @@ void setup() {
 }
 
 void loop() {
-    if (get(image, tft.buffer)) {
+    if (get("artwork", tft.buffer)) {
         memset(title, 0, 256);
-        get("track", title);
+        get("title", title);
         uint8_t x = max(0, ILI9163_WIDTH/2 - strlen((char*)title)*6/2);
         tft.set_cursor(x, 7);
         tft.print((char*)title);
@@ -105,6 +97,6 @@ void loop() {
     while (analogRead(A1) < 50) {get("volumeDown", NULL); Particle.process();}
     if (analogRead(A0) > 4000) {get("next", NULL); while (analogRead(A0) > 4000) Particle.process();}
     if (analogRead(A0) < 50) {get("previous", NULL); while (analogRead(A0) < 50) Particle.process();}
-    if (digitalRead(D3)) {get("playPause", NULL); while (digitalRead(D3)) Particle.process();}
+    if (!digitalRead(D3)) {get("playPause", NULL); while (!digitalRead(D3)) Particle.process();}
     tft.copy_buffer();
 }
