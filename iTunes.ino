@@ -5,7 +5,7 @@
 
 #define TIMEOUT 1500
 
-#define IP      {192, 168, 1, 69}
+#define IP      {10, 23, 101, 34}
 #define PORT    1337
 
 ILI9163 tft = ILI9163(D1, D0, D2); // cs, rst, a0
