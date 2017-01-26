@@ -23,6 +23,10 @@ projects = {
     'Print': {
         'files': ['Print.ino'],
         'libs': ['ILI9163']
+    },
+    'CPU': {
+        'files': ['CPU.ino'],
+        'libs': ['ILI9163']
     }
 }
 
@@ -38,6 +42,9 @@ for lib in projects[proj]['libs']:
 if usb:
     pre = os.listdir()
     proc = subprocess.run(['particle', 'compile', 'photon', *files], stdout = subprocess.PIPE)
+    if proc.returncode:
+        print(proc.stdout.decode())
+        sys.exit(proc.returncode)
     fw = proc.stdout.decode().split('/')[-1].strip()
     subprocess.run(['particle', 'flash', '--usb', fw])
     os.remove(fw)
