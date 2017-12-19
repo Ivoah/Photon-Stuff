@@ -3,9 +3,10 @@
 import os
 import sys
 import glob
+import getopt
 import subprocess
 
-DEVICE = 'Joda'
+device = 'Joda'
 
 projects = {
     'iTunes': {
@@ -27,20 +28,38 @@ projects = {
     'CPU': {
         'files': ['CPU.ino'],
         'libs': ['ILI9163']
+    },
+    'dunno': {
+        'files': ['dunno.ino'],
+        'libs': ['ILI9163']
+    },
+    'Moe': {
+        'files': ['Moe.ino'],
+        'libs': ['ILI9163']
+    },
+    'IDK': {
+        'files': ['IDK.ino'],
+        'libs': ['ILI9163']
     }
 }
 
-proj = sys.argv[1]
-try:
-    usb = sys.argv[2] == 'usb'
-except IndexError:
-    usb = False
+usb = False
+
+opts, args = getopt.getopt(sys.argv[1:], 'ud:', ['usb', 'device='])
+for opt, arg in opts:
+    if opt in ['-u', '--usb']:
+        usb = True
+    elif opt in ['-d', '--device']:
+        device = arg
+
+proj = args[0]
+
 files = projects[proj]['files']
 for lib in projects[proj]['libs']:
     files += glob.glob(f'Particle_{lib}/firmware/*')
 
 if usb:
-    pre = os.listdir()
+    #pre = os.listdir()
     proc = subprocess.run(['particle', 'compile', 'photon', *files], stdout = subprocess.PIPE)
     if proc.returncode:
         print(proc.stdout.decode())
@@ -49,4 +68,4 @@ if usb:
     subprocess.run(['particle', 'flash', '--usb', fw])
     os.remove(fw)
 else:
-    subprocess.run(['particle', 'flash', DEVICE, *files])
+    subprocess.run(['particle', 'flash', device, *files])

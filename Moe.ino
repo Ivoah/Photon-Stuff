@@ -3,14 +3,12 @@
 #define WHITE   rgb(255, 255, 255)
 #define BLACK   rgb(0, 0, 0)
 
-#define TIMEOUT 1500
+#define TIMEOUT 1000*10
 
-#define IP      {192, 168, 1, 67}
+#define IP      {10, 24, 102, 77}
 #define PORT    1337
 
 ILI9163 tft = ILI9163(D1, D0, D2); // cs, rst, a0
-
-uint8_t title[256];
 
 bool get(String req, uint8_t* buf) {
     TCPClient client;
@@ -18,8 +16,8 @@ bool get(String req, uint8_t* buf) {
         client.print("GET /");
         client.print(req);
         client.println(" HTTP/1.0");
-        client.println("Content-Length: 0");
-        client.println();
+        //client.println("Content-Length: 0");
+        //client.println();
         String header;
         String val;
         int len = 0;
@@ -67,21 +65,8 @@ bool get(String req, uint8_t* buf) {
 }
 
 void setup() {
-    pinMode(D3, INPUT_PULLUP);
-
-    tft.set_color(WHITE, BLACK);
-
-    tft.fill(rgb(0, 0, 0));
-    tft.copy_buffer();
-}
-
-void loop() {
-    if (get("artwork", tft.buffer)) {
-        memset(title, 0, 256);
-        get("title", title);
-        uint8_t x = max(0, ILI9163_WIDTH/2 - strlen((char*)title)*6/2);
-        tft.set_cursor(x, 7);
-        tft.print((char*)title);
+    if (get("tft", tft.buffer)) {
+        // Hooray!
     } else {
         for (size_t i = 0; i < sizeof(tft.buffer)/sizeof(uint8_t); i += 2) {
             uint8_t r = random(256);
@@ -90,10 +75,21 @@ void loop() {
             tft.buffer[i + 1] = c & 0xff;
         }
     }
-    while (analogRead(A1) > 4000) {get("volumeUp", NULL); Particle.process();}
-    while (analogRead(A1) < 50) {get("volumeDown", NULL); Particle.process();}
-    if (analogRead(A0) > 4000) {get("next", NULL); while (analogRead(A0) > 4000) Particle.process();}
-    if (analogRead(A0) < 50) {get("previous", NULL); while (analogRead(A0) < 50) Particle.process();}
-    if (!digitalRead(D3)) {get("playPause", NULL); while (!digitalRead(D3)) Particle.process();}
     tft.copy_buffer();
+}
+
+void loop() {
+    if (System.buttonPushed()) {
+        if (get("tft", tft.buffer)) {
+            // Hooray!
+        } else {
+            for (size_t i = 0; i < sizeof(tft.buffer)/sizeof(uint8_t); i += 2) {
+                uint8_t r = random(256);
+                uint16_t c = rgb(r, r, r);
+                tft.buffer[i] = (c >> 8) & 0xff;
+                tft.buffer[i + 1] = c & 0xff;
+            }
+        }
+        tft.copy_buffer();
+    }
 }

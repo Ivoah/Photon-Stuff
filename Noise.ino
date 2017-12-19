@@ -1,7 +1,4 @@
-// This #include statement was automatically added by the Particle IDE.
 #include "PerlinNoise.h"
-
-// This #include statement was automatically added by the Particle IDE.
 #include "ILI9163.h"
 
 #include <cmath>
